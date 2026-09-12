@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
-project(SmartPointersLib LANGUAGE CXX)
+project(SmartPointersLib LANGUAGES CXX)
 
-set(CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 20)
 
-add_library(${PROJECT_NAME}
-    STATIC
-        
+add_library(${PROJECT_NAME} INTERFACE)
+
+target_include_directories(${PROJECT_NAME} 
+    INTERFACE 
+        UniquePtr
 )

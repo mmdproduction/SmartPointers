@@ -1,12 +1,13 @@
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 
 template <typename T>
 struct Deleter{
     using type_element = std::remove_extent_t<T>;
-    void operator()(type_element* ptr) const {
+    void operator()(type_element* ptr) const noexcept {
         if constexpr (std::is_array_v<T>) {
             delete[] ptr;
         }
@@ -16,54 +17,77 @@ struct Deleter{
     }
 };
 
-template<typename T, typename  Deleter_t = Deleter<T>>
+template<typename T>
 class UniquePtr {
-    using type_element = std::remove_extent_t<T>;
+    using Type = std::remove_extent_t<T>;
 private:
-    type_element* ptr_;
-    Deleter_t deleter_;
+    Type* ptr_ = nullptr;
+    Deleter<T> deleter_;
 public:
+    UniquePtr() = default;
 
-    UniquePtr(type_element* ptr): ptr_(ptr){}
+    UniquePtr(Type* ptr): ptr_(ptr){}
 
-    UniquePtr(const UniquePtr<T, Deleter_t>& other) = delete;
-    UniquePtr<T, Deleter_t>& operator= (const UniquePtr<T, Deleter_t>& other) = delete;
+    UniquePtr(const UniquePtr<T>& other) = delete;
+    UniquePtr<T>& operator= (const UniquePtr<T>& other) = delete;
 
-    UniquePtr(UniquePtr<T, Deleter_t>&& other) noexcept(std::is_nothrow_move_constructible_v<Deleter_t>) : ptr_(other.ptr_), deleter_(std::move(other.deleter_)){
+    UniquePtr(UniquePtr<T>&& other) noexcept : ptr_(other.ptr_), deleter_(){
         other.ptr_ = nullptr;
     }
 
-    UniquePtr<T, Deleter_t>& operator= (UniquePtr<T, Deleter_t>&& other) noexcept(std::is_nothrow_move_assignable_v<Deleter_t>) {
+    UniquePtr<T>& operator= (UniquePtr<T>&& other) noexcept {
         if(this == &other){
             return *this;
         }
-        else if(ptr_!= nullptr){
+        if(ptr_!= nullptr){
             deleter_(ptr_);
         }
         
         ptr_ = other.ptr_;
-        deleter_ = std::move(other.deleter_);
         other.ptr_ = nullptr;
 
         return *this;
     }
 
     template<typename... Args>
-    static UniquePtr<T, Deleter_t> make_unique(Args&&... args){
-        type_element* ptr = new T(std::forward<Args>(args)...);
-        return UniquePtr<T, Deleter_t>(ptr);
+    static UniquePtr<T> make_unique(Args&&... args) requires(!std::is_array_v<T>){
+        return UniquePtr<T>(new T(std::forward<Args>(args)...));    
     }
 
-    type_element* release() noexcept {
-        type_element* ptr = ptr_;
+    static UniquePtr<T> make_unique(std::size_t size) requires(std::is_array_v<T>){
+        return UniquePtr<T>(new Type[size]{});    
+    }
+
+    Type* release() noexcept {
+        Type* ptr = ptr_;
         ptr_ = nullptr;
         return ptr;
     }
-    void reset(type_element* ptr = nullptr) noexcept {
+    void reset(Type* ptr = nullptr) noexcept {
         if(ptr_ != ptr){
             deleter_(ptr_);
             ptr_ = ptr;
         }
+    }
+
+    Type* get() const noexcept{
+        return ptr_;
+    }
+
+    Type& operator*() const requires(!std::is_array_v<T>) {
+        return *ptr_;
+    }
+
+    Type* operator->() const noexcept requires(!std::is_array_v<T>){
+        return ptr_;
+    }
+
+    Type& operator[](std::size_t index) const requires(std::is_array_v<T>){
+        return ptr_[index];
+    }
+
+    explicit operator bool() const noexcept{
+        return ptr_ != nullptr;
     }
 
     ~UniquePtr(){
