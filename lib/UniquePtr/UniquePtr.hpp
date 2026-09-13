@@ -4,22 +4,25 @@
 #include <type_traits>
 #include <utility>
 
-template <typename T>
-struct Deleter{
-    using type_element = std::remove_extent_t<T>;
-    void operator()(type_element* ptr) const noexcept {
-        if constexpr (std::is_array_v<T>) {
-            delete[] ptr;
-        }
-        else {
-            delete ptr;
-        }
-    }
-};
+
 
 template<typename T>
 class UniquePtr {
     using Type = std::remove_extent_t<T>;
+
+    template<typename delT>
+    struct Deleter{
+        using type_element = std::remove_extent_t<delT>;
+        void operator()(type_element* ptr) const noexcept {
+            if constexpr (std::is_array_v<delT>) {
+                delete[] ptr;
+            }
+            else {
+                delete ptr;
+            }
+        }
+    };
+
 private:
     Type* ptr_ = nullptr;
     Deleter<T> deleter_;
