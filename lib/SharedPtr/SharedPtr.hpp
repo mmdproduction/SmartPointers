@@ -4,12 +4,13 @@
 template<typename T>
 class SharedPtr{
     private:
-    ControlBlock<T>* control_ = nullptr;
+    ControlBlockBase* control_ = nullptr;
+    T* storage_ptr_ = nullptr;
 
     void release_control(){
         if(control_){
-            control_->shared_count--;
-            if(control_->shared_count == 0){
+            control_->shared_counter--;
+            if(control_->shared_counter == 0){
                 delete control_;
                 
             }
@@ -30,7 +31,7 @@ class SharedPtr{
 
     SharedPtr(const SharedPtr<T>& other) noexcept: control_(other.control_){
         if(other.control_)
-            control_->shared_count++;
+            control_->shared_counter++;
     }
 
     SharedPtr(SharedPtr<T>&& other) noexcept: control_(other.control_){
@@ -44,7 +45,7 @@ class SharedPtr{
         release_control();
         control_ = other.control_;
         if(other.control_)
-            control_->shared_count++;
+            control_->shared_counter++;
 
         return *this;
     }
@@ -61,7 +62,7 @@ class SharedPtr{
     }
 
     std::size_t use_count() const noexcept{
-        return control_ ? control_->shared_count : 0;
+        return control_ ? control_->shared_counter : 0;
     }
 
 

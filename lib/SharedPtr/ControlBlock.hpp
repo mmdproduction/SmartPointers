@@ -3,9 +3,15 @@
 #include <cstddef>
 #include <type_traits>
 
-template <typename T>
-struct ControlBlock{
-    private:
+
+class ControlBlockBase{
+    public:
+    std::size_t shared_counter = 1;
+    virtual ~ControlBlockBase() = default;
+};
+
+template<typename T>
+class ControlBlock : public ControlBlockBase{
     template<typename delT>
     struct Deleter{
         using Type = std::remove_extent_t<delT>;
@@ -20,18 +26,13 @@ struct ControlBlock{
     };
 
     using Type = std::remove_extent_t<T>;
-
-    
     Deleter<T> deleter_;
-
-    public:
-    
     Type* ptr_;
-    std::size_t shared_count = 1;
+    
+    public:
     ControlBlock(Type* ptr): ptr_(ptr){}
 
     ~ControlBlock(){
         deleter_(ptr_);
     }
-
 };
