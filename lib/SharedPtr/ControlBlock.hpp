@@ -28,11 +28,14 @@ class ControlBlock : public ControlBlockBase{
     using Type = std::remove_extent_t<T>;
     Deleter<T> deleter_;
     Type* ptr_;
-    
-    public:
-    ControlBlock(Type* ptr): ptr_(ptr){}
 
-    ~ControlBlock(){
+    public:
+    ControlBlock(Type* ptr) noexcept: ptr_(ptr){}
+
+    ControlBlock(const ControlBlock&) = delete;
+    ControlBlock& operator= (const ControlBlock&) = delete;
+
+    ~ControlBlock() override{
         deleter_(ptr_);
     }
 };
