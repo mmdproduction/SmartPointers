@@ -1,6 +1,5 @@
-#include "SharedPtr.hpp"
-#include "UniquePtr.hpp"
+#include "../benchmark/Benchmark.hpp"
 
 int main(){
-    
+    run_benchmark();
 }

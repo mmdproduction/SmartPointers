@@ -8,7 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(lib)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 
-add_executable(${PROJECT_NAME} app/main.cpp)
+add_executable(${PROJECT_NAME} app/main.cpp benchmark/Benchmark.cpp)
 
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE
