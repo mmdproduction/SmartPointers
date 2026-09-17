@@ -3,6 +3,7 @@
 #include "ControlBlock.hpp"
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 
 
 
@@ -102,6 +103,19 @@ class SharedPtr{
             other.storage_ptr_ = nullptr;
     }
 
+    template<typename... Args>
+        requires (!std::is_array_v<T>)
+    static SharedPtr<T> make_shared(Args&&... args) {
+        return SharedPtr<T>(
+            new T(std::forward<Args>(args)...)
+        );
+    }
+
+    static SharedPtr<T> make_shared(std::size_t size)
+        requires (std::is_unbounded_array_v<T>)
+    {
+        return SharedPtr<T>(new Type[size]{});
+    }
     
 
     SharedPtr& operator=(const SharedPtr<T>& other) noexcept{
