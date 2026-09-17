@@ -12,21 +12,15 @@ class ControlBlockBase{
 
 template<typename T>
 class ControlBlock : public ControlBlockBase{
-    template<typename delT>
-    struct Deleter{
-        using Type = std::remove_extent_t<delT>;
-        void operator()(Type* ptr) const noexcept {
-            if constexpr (std::is_array_v<delT>) {
+    using Type = std::remove_extent_t<T>;
+        void deleter(Type* ptr) const noexcept {
+            if constexpr (std::is_array_v<T>) {
                 delete[] ptr;
             }
             else {
                 delete ptr;
             }
         }
-    };
-
-    using Type = std::remove_extent_t<T>;
-    Deleter<T> deleter_;
     Type* ptr_;
 
     public:
@@ -36,6 +30,6 @@ class ControlBlock : public ControlBlockBase{
     ControlBlock& operator= (const ControlBlock&) = delete;
 
     ~ControlBlock() override{
-        deleter_(ptr_);
+        deleter(ptr_);
     }
 };

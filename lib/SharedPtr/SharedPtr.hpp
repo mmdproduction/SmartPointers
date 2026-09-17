@@ -9,6 +9,8 @@
 template<typename T>
 class SharedPtr{
     private:
+    template<typename  U>
+    friend class SharedPtr;
     using Type = std::remove_extent_t<T>;
     ControlBlockBase* control_ = nullptr;
     Type* storage_ptr_ = nullptr;
@@ -76,6 +78,16 @@ class SharedPtr{
         }
     }
 
+    SharedPtr(const SharedPtr<T>& other) noexcept: control_(other.control_), storage_ptr_(other.storage_ptr_){
+        if(other.control_)
+            control_->shared_counter++;
+    }
+
+    SharedPtr(SharedPtr<T>&& other) noexcept: control_(other.control_), storage_ptr_(other.storage_ptr_){
+            other.control_ = nullptr;
+            other.storage_ptr_ = nullptr;
+    }
+
     template<typename U>
         requires compatible<U>
     SharedPtr(const SharedPtr<U>& other) noexcept: control_(other.control_), storage_ptr_(other.storage_ptr_){
@@ -117,6 +129,17 @@ class SharedPtr{
         other.storage_ptr_ = nullptr;
 
         return *this;
+    }
+
+    void reset(Type* ptr = nullptr) {
+        if(storage_ptr_ != ptr){
+            release_control();
+            if(ptr != nullptr)
+            {
+                control_ = new ControlBlock<T>(ptr);
+                storage_ptr_ = ptr;
+            }
+        }
     }
 
     std::size_t use_count() const noexcept{
