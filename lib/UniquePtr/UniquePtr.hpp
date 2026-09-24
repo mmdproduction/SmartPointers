@@ -8,24 +8,18 @@
 
 template<typename T>
 class UniquePtr {
+private:
     using Type = std::remove_extent_t<T>;
-
-    template<typename delT>
-    struct Deleter{
-        using type_element = std::remove_extent_t<delT>;
-        void operator()(type_element* ptr) const noexcept {
-            if constexpr (std::is_array_v<delT>) {
+    Type* ptr_ = nullptr;
+    
+    void deleter_(Type* ptr) const noexcept {
+            if constexpr (std::is_array_v<T>) {
                 delete[] ptr;
             }
             else {
                 delete ptr;
             }
         }
-    };
-
-private:
-    Type* ptr_ = nullptr;
-    Deleter<T> deleter_;
 public:
     UniquePtr() = default;
 
@@ -34,7 +28,7 @@ public:
     UniquePtr(const UniquePtr<T>& other) = delete;
     UniquePtr<T>& operator= (const UniquePtr<T>& other) = delete;
 
-    UniquePtr(UniquePtr<T>&& other) noexcept : ptr_(other.ptr_), deleter_(){
+    UniquePtr(UniquePtr<T>&& other) noexcept : ptr_(other.ptr_){
         other.ptr_ = nullptr;
     }
 
