@@ -19,15 +19,12 @@ using Clock = std::chrono::steady_clock;
 constexpr std::size_t Iterations = 1'000'000;
 constexpr std::size_t Repeats = 7;
 
-// Делает значение наблюдаемым для оптимизатора.
-// Это расширение GCC/Clang, а не стандартный C++.
+
 template<typename T>
 inline void escape(T& value) noexcept {
     asm volatile("" : : "g"(std::addressof(value)) : "memory");
 }
 
-// Обёртки задают одинаковый интерфейс для всех вариантов.
-// Raw удаляется явно, умные указатели — своими деструкторами.
 
 struct Raw {
     using Pointer = int*;
